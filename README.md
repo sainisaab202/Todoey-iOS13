@@ -1,19 +1,21 @@
-![App Brewery Banner](https://github.com/londonappbrewery/Images/blob/master/AppBreweryBanner.png)
+![](screenshot/app.gif)
 
 
 # Todoey ✓
 
-## Our Goal
+## Goal
 
-The objective of this tutorial is to understand how to save data in iOS. We'll look at various choices and learn to use UserDefaults, Core Data and Realm.
-
-
-## What you will create
-
-A todolist app to keep track of all your tasks.
+To-Do List app that let you create categories in the list and you can add items within those categories. 
+The objective is to understand how to save data in iOS. This project have three commits, one for each way to save data: using UserDefaults, Core Data and Realm.
 
 
->This is a companion project to The App Brewery's Complete iOS Development Bootcamp, check out the full course at [www.appbrewery.co](https://www.appbrewery.co/)
+## What you will learn
 
-![End Banner](https://github.com/londonappbrewery/Images/blob/master/readme-end-banner.png)
+TableViewContorllers
+Integrating 3rd party libraries
+Saving data using UserDefaults, custom pList
+Saving data using CoreData - SQlite
+Saving data using Realm - MongoDB/RealmSwift
 
+
+>This app/project created with the help of App Brewery's course resources
