@@ -8,7 +8,9 @@
 
 import Foundation
 
-class Item: Codable{
-    var title: String = ""
-    var done: Bool = false
-}
+//commenting out this class because we have created an entity of with same name in our DataModel
+
+//class Item: Codable{
+//    var title: String = ""
+//    var done: Bool = false
+//}

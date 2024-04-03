@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import CoreData
 
 //because it's inhereting from UITableViewController we don't need to send any delegate
 //userDefaults can only save default data types and can't be used with custom types
@@ -15,17 +16,26 @@ class TodoListViewController: UITableViewController {
 
     var itemArray = [Item]()
     
+    var selectedCategory : Category?{
+        didSet{
+            loadItems()
+        }
+    }
+    
     //to save data in Plist
     let defaults = UserDefaults.standard
     
-    //file path to local storage path where we can store our apps data
+    //file path to local storage path where we can store our apps data for custom pList
     let dataFilePath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?.appendingPathComponent("Items.plist")
+    
+    //access to our db
+    let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
     
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view.
         
-//        print(dataFilePath)
+        //print(dataFilePath)
         
 //        let newItem = Item()
 //        newItem.title = "Find Mike"
@@ -45,7 +55,9 @@ class TodoListViewController: UITableViewController {
 //        }
         
 //        get data from our custom plist
-        loadItems()
+        
+        //not loading here as it should load only if selectedCategory is not nil
+        //loadItems()
     }
 
 //    datasource methods
@@ -66,6 +78,9 @@ class TodoListViewController: UITableViewController {
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         
         itemArray[indexPath.row].done = !itemArray[indexPath.row].done
+        
+        //context.delete(itemArray[indexPath.row])
+        //itemArray.remove(at: indexPath.row)
         
         saveItems()
         
@@ -89,8 +104,10 @@ class TodoListViewController: UITableViewController {
             
             if let txt = textField.text{
                 
-                let newItem = Item()
+                let newItem = Item(context: self.context)
                 newItem.title = txt
+                newItem.done = false
+                newItem.parentCategory = self.selectedCategory
                 
                 self.itemArray.append(newItem)
                 
@@ -118,26 +135,82 @@ class TodoListViewController: UITableViewController {
     }
     
     func saveItems(){
-        let encoder = PropertyListEncoder()
+        
         do{
-            let data = try encoder.encode(itemArray)
-            if let dataPath = dataFilePath{
-                try data.write(to: dataPath)
-            }
+            try context.save()
         }catch{
-            print("Error encoding item array: \(error)")
+            print("error saving context: \(error)")
         }
+        
+        ////This is for custom pList
+//        let encoder = PropertyListEncoder()
+//        do{
+//            let data = try encoder.encode(itemArray)
+//            if let dataPath = dataFilePath{
+//                try data.write(to: dataPath)
+//            }
+//        }catch{
+//            print("Error encoding item array: \(error)")
+//        }
         
     }
     
-    func loadItems(){
-        if let data = try? Data(contentsOf: dataFilePath!){
-            let decoder = PropertyListDecoder()
-            do{
-                itemArray = try decoder.decode([Item].self, from: data)
-            }catch{
-                print("Error decoding item array: \(error)")            }
+    //we have a default value for the parameter of this func
+    func loadItems(with request: NSFetchRequest<Item> = Item.fetchRequest(), predicate: NSPredicate? = nil){
+        
+        let categoryPredicate = NSPredicate(format: "parentCategory.name MATCHES %@", selectedCategory!.name!)
+        
+        if let additionalPredicate = predicate{
+            request.predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [categoryPredicate, additionalPredicate])
+        }else{
+            request.predicate = categoryPredicate
         }
+        
+        
+        do{
+            itemArray = try context.fetch(request)
+        }catch {
+            print("Error fetchinig data from context \(error)")
+        }
+        
+        
+        tableView.reloadData()
+        
+        ////This is for custom pList
+//        if let data = try? Data(contentsOf: dataFilePath!){
+//            let decoder = PropertyListDecoder()
+//            do{
+//                itemArray = try decoder.decode([Item].self, from: data)
+//            }catch{
+//                print("Error decoding item array: \(error)")            }
+//        }
     }
 }
 
+//MARK: - SearchBarDelegate
+extension TodoListViewController: UISearchBarDelegate{
+    
+    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
+        
+        let request: NSFetchRequest<Item> = Item.fetchRequest()
+        
+        //to set any condition on our search query we need this NSPredicate
+        let predicate = NSPredicate(format: "title CONTAINS[cd] %@", searchBar.text!)
+        
+        request.sortDescriptors = [NSSortDescriptor(key: "title", ascending: true)]
+        
+        loadItems(with: request, predicate: predicate)
+    }
+    
+    func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
+        if searchBar.text?.count == 0{
+            loadItems()
+            print("should clear filter")
+            
+            DispatchQueue.main.async {
+                searchBar.resignFirstResponder()
+            }
+        }
+    }
+    
+}
