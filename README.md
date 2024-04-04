@@ -1,4 +1,4 @@
-![](screenshot/app.gif)
+![](screenshot/app.gif)     ![](screenshot/app-swipe-delete.gif)
 
 
 # Todoey ✓

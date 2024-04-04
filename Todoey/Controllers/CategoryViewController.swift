@@ -22,13 +22,13 @@ class CategoryViewController: UITableViewController {
         
         loadCategories()
     }
-
+    
     // MARK: - Table view data source
-
+    
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return categories?.count ?? 1
     }
-
+    
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "CategoryCell", for: indexPath)
         cell.textLabel?.text = categories?[indexPath.row].name ?? "No Categories added yet"
@@ -50,6 +50,50 @@ class CategoryViewController: UITableViewController {
         }
     }
     
+    override func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
+        
+        let swipeAction = UIContextualAction(style: .destructive, title: "Delete", handler: { contextualAction, view, actionPerformed in
+            
+            
+            if let categoryToDelete = self.categories?[indexPath.row]{
+                
+                let alert = UIAlertController(title: "Delete \(categoryToDelete.name)", message: "This category contains \(categoryToDelete.items.count) Items", preferredStyle: .alert)
+                alert.addAction(UIAlertAction(title: "Delete", style: .destructive, handler: { action in
+                    
+                    
+                    do{
+                        try self.realm.write {
+                            if categoryToDelete.items.isEmpty{
+                                self.realm.delete(categoryToDelete)
+                            }else{
+                                for item in categoryToDelete.items{
+                                    self.realm.delete(item)
+                                }
+                                self.realm.delete(categoryToDelete)
+                            }
+                        }
+                    }catch{
+                        print("Error while deleting category: \(error)")
+                    }
+                    
+                    self.tableView.reloadData()
+                    
+                }))
+                alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+                
+                self.present(alert, animated: true)
+                
+            }else{print("else of categoryToDelete")}
+        })
+        swipeAction.backgroundColor = .gray
+        swipeAction.image = UIImage(systemName: "trash")
+        
+        let swipeActionConfig = UISwipeActionsConfiguration(actions: [swipeAction])
+        swipeActionConfig.performsFirstActionWithFullSwipe = true
+        
+        return swipeActionConfig
+    }
+    
     //MARK: - crud operation func
     func loadCategories(){
         categories = realm.objects(Category.self)
@@ -68,7 +112,7 @@ class CategoryViewController: UITableViewController {
         //refresh table
         tableView.reloadData()
     }
-
+    
     //MARK: - addButton
     @IBAction func btnAddTouchUp(_ sender: UIBarButtonItem) {
         

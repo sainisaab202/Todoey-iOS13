@@ -32,7 +32,7 @@ class TodoListViewController: UITableViewController {
         //loadItems()
     }
 
-//    datasource methods
+//MARK: -    datasource methods
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return todoItems?.count ?? 1
     }
@@ -51,7 +51,7 @@ class TodoListViewController: UITableViewController {
         return cell
     }
     
-//    delegate methods
+//MARK: -     delegate methods
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         if let item = todoItems?[indexPath.row]{
             do{
@@ -67,6 +67,43 @@ class TodoListViewController: UITableViewController {
         
         //to remove the grey bar selection
         tableView.deselectRow(at: indexPath, animated: true)
+    }
+    
+    override func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
+        
+        let swipeAction = UIContextualAction(style: .destructive, title: "Delete", handler: { contextualAction, view, actionPerformed in
+            
+            
+            if let itemToDelete = self.todoItems?[indexPath.row]{
+                
+                let alert = UIAlertController(title: "Delete \(itemToDelete.title)", message: "", preferredStyle: .alert)
+                alert.addAction(UIAlertAction(title: "Delete", style: .destructive, handler: { action in
+                    
+                    
+                    do{
+                        try self.realm.write {
+                                self.realm.delete(itemToDelete)
+                            }
+                    }catch{
+                        print("Error while deleting item: \(error)")
+                    }
+                    
+                    self.tableView.reloadData()
+                    
+                }))
+                alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+                
+                self.present(alert, animated: true)
+                
+            }else{print("else of itemToDelete")}
+        })
+        swipeAction.backgroundColor = .gray
+        swipeAction.image = UIImage(systemName: "trash")
+        
+        let swipeActionConfig = UISwipeActionsConfiguration(actions: [swipeAction])
+        swipeActionConfig.performsFirstActionWithFullSwipe = true
+        
+        return swipeActionConfig
     }
 
     //add new items
