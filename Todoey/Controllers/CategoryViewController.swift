@@ -94,6 +94,52 @@ class CategoryViewController: UITableViewController {
         return swipeActionConfig
     }
     
+    override func tableView(_ tableView: UITableView, leadingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
+        
+        let swipeAction = UIContextualAction(style: .normal, title: "Edit") { contextualAction, view, actionPerformed in
+            
+            let editAlert = UIAlertController(title: "Rename", message: "", preferredStyle: .alert)
+            
+            let actionOk = UIAlertAction(title: "Ok", style: .default) { action in
+                //save changes to the name
+                if let txt = editAlert.textFields?.first?.text{
+                    if !txt.isEmpty{
+                        
+                        if let currentCategory = self.categories?[indexPath.row]{
+                            
+                            do{
+                                try self.realm.write {
+                                    currentCategory.name = txt
+                                }
+                                self.tableView.reloadData()
+                            }catch{
+                                print("error saving category context: \(error)")
+                            }
+                        }
+                    }
+                }
+            }
+            
+            let actionCancel = UIAlertAction(title: "Cancel", style: .cancel)
+            
+            editAlert.addAction(actionOk)
+            editAlert.addAction(actionCancel)
+            editAlert.addTextField { textField in
+                textField.placeholder = self.categories?[indexPath.item].name
+            }
+            
+            self.present(editAlert,animated: true)
+            
+        }
+        swipeAction.backgroundColor = .darkGray
+        swipeAction.image = UIImage(systemName: "character.cursor.ibeam")
+        
+        let swipeActionConfig = UISwipeActionsConfiguration(actions: [swipeAction])
+        swipeActionConfig.performsFirstActionWithFullSwipe = true
+        
+        return swipeActionConfig
+    }
+    
     //MARK: - crud operation func
     func loadCategories(){
         categories = realm.objects(Category.self)
