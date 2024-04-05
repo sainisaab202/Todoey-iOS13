@@ -7,12 +7,11 @@
 //
 
 import UIKit
-//import CoreData
 import RealmSwift
 
 //because it's inhereting from UITableViewController we don't need to set any delegate
 
-class TodoListViewController: UITableViewController {
+class TodoListViewController: SwipeTableViewController {
 
     var todoItems: Results<Item>?
     
@@ -38,8 +37,9 @@ class TodoListViewController: UITableViewController {
     }
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        
-        let cell = tableView.dequeueReusableCell(withIdentifier: "ToDoItemCell", for: indexPath)
+        //here we are NOT creating a brand new cell
+        //calling super class method to get the cell and adding some sauce to that cell
+        let cell = super.tableView(tableView, cellForRowAt: indexPath)
         
         if let item = todoItems?[indexPath.row]{
             cell.textLabel?.text = item.title
@@ -114,10 +114,25 @@ class TodoListViewController: UITableViewController {
         present(alert, animated: true, completion: nil)
     }
     
+    //MARK: - CRUD operation
     func loadItems(){
         todoItems = selectedCategory?.items.sorted(byKeyPath: "title", ascending: true)
         
         tableView.reloadData()
+    }
+    
+    override func updateModel(at indexPath: IndexPath) {
+        if let itemToDelete = self.selectedCategory?.items[indexPath.row]{
+            do{
+                try self.realm.write{
+                    //no need to remove individually from the list of category
+//                    self.selectedCategory?.items.remove(at: indexPath.row)
+                    self.realm.delete(itemToDelete)
+                }
+            }catch{
+                print("error deleting item: \(error)")
+            }
+        }
     }
 }
 
