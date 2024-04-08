@@ -8,11 +8,14 @@
 
 import UIKit
 import RealmSwift
+import ChameleonFramework
 
 //because it's inhereting from UITableViewController we don't need to set any delegate
 
 class TodoListViewController: SwipeTableViewController {
-
+    
+    @IBOutlet weak var searchBar: UISearchBar!
+    
     var todoItems: Results<Item>?
     
     let realm = try! Realm()
@@ -30,6 +33,28 @@ class TodoListViewController: SwipeTableViewController {
         //not loading here as it should load only if selectedCategory is not nil
         //loadItems()
     }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        
+        if let colorHex = self.selectedCategory?.colorCode{
+            
+            title = selectedCategory!.name
+            
+            guard let navBar = navigationController?.navigationBar else {fatalError("Navigation Controller does not exist.")}
+            
+            if let navBarColor = UIColor(hexString: colorHex){
+                
+                navBar.scrollEdgeAppearance?.backgroundColor = navBarColor
+                
+                //color for backbutton
+                navBar.tintColor = ContrastColorOf(navBarColor, returnFlat: true)
+                navBar.largeTitleTextAttributes = [NSAttributedString.Key.foregroundColor: ContrastColorOf(navBarColor, returnFlat: true)]
+                
+                //search bar background color
+                searchBar.barTintColor = navBarColor
+            }
+        }
+    }
 
 //    datasource methods
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
@@ -44,6 +69,11 @@ class TodoListViewController: SwipeTableViewController {
         if let item = todoItems?[indexPath.row]{
             cell.textLabel?.text = item.title
             cell.accessoryType = item.done ? .checkmark : .none
+            
+            if let color = UIColor(hexString: selectedCategory!.colorCode)?.darken(byPercentage: CGFloat(indexPath.row)/CGFloat(todoItems!.count)){
+                cell.backgroundColor = color
+                cell.textLabel?.textColor = ContrastColorOf(color, returnFlat: true)
+            }
         }else{
             cell.textLabel?.text = "No Items added yet!"
         }

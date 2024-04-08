@@ -1,4 +1,4 @@
-![](screenshot/app.gif)
+![](screenshot/app.gif)         ![](screenshot/app3rdPartyLib.gif)
 
 
 # Todoey ✓

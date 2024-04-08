@@ -9,6 +9,7 @@
 import UIKit
 //import CoreData
 import RealmSwift
+import ChameleonFramework
 
 class CategoryViewController: SwipeTableViewController {
     
@@ -24,6 +25,10 @@ class CategoryViewController: SwipeTableViewController {
         
         tableView.rowHeight = 60.0
     }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        navigationController?.navigationBar.scrollEdgeAppearance?.backgroundColor = .systemBlue
+    }
 
     // MARK: - Table view data source
 
@@ -38,12 +43,19 @@ class CategoryViewController: SwipeTableViewController {
         
         cell.textLabel?.text = categories?[indexPath.row].name ?? "No Categories added yet"
         
+        cell.backgroundColor = UIColor(hexString: (categories?[indexPath.row].colorCode) ?? UIColor.white.hexValue())
+        
+        cell.textLabel?.textColor = ContrastColorOf(cell.backgroundColor!, returnFlat: true)
+        
         return cell
     }
     
     //MARK: - TableView delegate methods
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         performSegue(withIdentifier: "goToItems", sender: self)
+        
+        //to keep the default color
+        tableView.deselectRow(at: indexPath, animated: true)
     }
     
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
@@ -100,6 +112,7 @@ class CategoryViewController: SwipeTableViewController {
                 
                 let newCategory = Category()
                 newCategory.name = txt
+                newCategory.colorCode = UIColor.randomFlat().hexValue()
                 
                 //save data
                 self.save(category: newCategory)
